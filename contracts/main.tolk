@@ -3,8 +3,8 @@ import "errors"
 const MIN_TONS_FOR_STORAGE = ton("0.01")
 
 struct Storage {
-    counter: uint64
-    latestSenderAddress: address
+    number: uint32
+    recentSender: address
     ownerAddress: address
 }
 
@@ -18,13 +18,13 @@ fun Storage.save(self) {
     contract.setData(self.toCell())
 }
 
-struct (0x000000001) Increment {
+struct (0x00000001) Increment {
     incrementBy: uint32
 }
 
-struct (0x000000002) Deposit {}
+struct (0x00000002) Deposit {}
 
-struct (0x000000003) Withdrawal {
+struct (0x00000003) Withdrawal {
     amount: coins
 }
 
@@ -36,7 +36,8 @@ fun onInternalMessage(in: InMessage) {
     match (msg) {
         Increment => {
             var storage = lazy Storage.load();
-            storage.counter += msg.incrementBy;
+            storage.number += msg.incrementBy;
+            storage.recentSender = in.senderAddress;
             storage.save();
         }
 
@@ -59,7 +60,7 @@ fun onInternalMessage(in: InMessage) {
                 bounce: BounceMode.NoBounce,
                 value: min(msg.amount, balance - MIN_TONS_FOR_STORAGE),
                 dest: in.senderAddress,
-                body: null
+                body: createEmptyCell()
             });
 
             reply.send(SEND_MODE_PAY_FEES_SEPARATELY)
@@ -71,12 +72,16 @@ fun onInternalMessage(in: InMessage) {
     }
 }
 
-get fun (): (int, address, address) {
+get fun getStorage(): (int, address, address) {
     val storage = lazy Storage.load();
 
-    return storage
+    return (
+        storage.number,
+        storage.recentSender,
+        storage.ownerAddress
+    )
 }
 
-get fun balance(): int {
+get fun getBalance(): int {
     return contract.getOriginalBalance()
 }

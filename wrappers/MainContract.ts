@@ -36,7 +36,7 @@ export class MainContract implements Contract {
 
     public async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
         const msgBody = beginCell()
-            .storeUint(2, 32) // OP code
+            .storeUint(0x00000002, 32) // OP code
             .endCell();
 
         await provider.internal(via, {
@@ -53,7 +53,7 @@ export class MainContract implements Contract {
         incrementBy: number
     ) {
         const msgBody = beginCell()
-            .storeUint(1, 32) // OP code
+            .storeUint(0x00000001, 32) // OP code
             .storeUint(incrementBy, 32) // increment_by value
             .endCell();
 
@@ -108,8 +108,8 @@ export class MainContract implements Contract {
         });
     }
 
-    public async getData(provider: ContractProvider) {
-        const { stack} = await provider.get('get_contract_storage_data', [])
+    public async getStorage(provider: ContractProvider) {
+        const { stack } = await provider.get('getStorage', [])
 
         return {
             number: stack.readNumber(),
@@ -119,7 +119,7 @@ export class MainContract implements Contract {
     }
 
     public async getBalance(provider: ContractProvider) {
-        const { stack} = await provider.get('balance', [])
+        const { stack} = await provider.get('getBalance', [])
 
         return stack.readNumber()
     }
