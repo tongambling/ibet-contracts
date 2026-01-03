@@ -11,7 +11,7 @@ import {
 
 export type MainContractConfig = {
     number: number;
-    address: Address;
+    recentSender: Address;
     ownerAddress: Address;
 };
 
@@ -25,7 +25,7 @@ export class MainContract implements Contract {
     public static createFromConfig(config: MainContractConfig, code: Cell, workchain = 0) {
         const data = beginCell()
             .storeUint(config.number, 32)
-            .storeAddress(config.address)
+            .storeAddress(config.recentSender)
             .storeAddress(config.ownerAddress)
             .endCell();
         const init = { code: code, data: data }
@@ -48,7 +48,7 @@ export class MainContract implements Contract {
 
     public async sendIncrement(
         provider: ContractProvider,
-        sender: Sender,
+        via: Sender,
         value: bigint,
         incrementBy: number
     ) {
@@ -57,7 +57,7 @@ export class MainContract implements Contract {
             .storeUint(incrementBy, 32) // increment_by value
             .endCell();
 
-        await provider.internal(sender, {
+        await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: msgBody,
@@ -66,7 +66,7 @@ export class MainContract implements Contract {
 
     public async sendDeposit(provider: ContractProvider, sender: Sender, value: bigint) {
         const msgBody = beginCell()
-            .storeUint(2, 32) // OP code
+            .storeUint(0x00000002, 32) // OP code
             .endCell();
 
         await provider.internal(sender, {
@@ -90,14 +90,14 @@ export class MainContract implements Contract {
         });
     }
 
-    public async sendWithdrawalRequest(
+    public async sendWithdrawal(
         provider: ContractProvider,
         sender: Sender,
         value: bigint,
         amount: bigint
     ) {
         const msgBody = beginCell()
-            .storeUint(3, 32) // OP code
+            .storeUint(0x00000003, 32) // OP code
             .storeCoins(amount)
             .endCell();
 

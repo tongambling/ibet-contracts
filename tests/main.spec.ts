@@ -17,14 +17,14 @@ describe('main.fc contract tests', () => {
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
-        initWallet = await blockchain.treasury('initWallet');
         ownerWallet = await blockchain.treasury('ownerWallet');
+        initWallet = await blockchain.treasury('initWallet');
 
         contract = blockchain.openContract(
             MainContract.createFromConfig(
                 {
                     number: 0,
-                    address: initWallet.address,
+                    recentSender: initWallet.address,
                     ownerAddress: ownerWallet.address,
                 },
                 codeCell
@@ -96,7 +96,7 @@ describe('main.fc contract tests', () => {
 
         await contract.sendDeposit(senderWallet.getSender(), toNano('5'));
 
-        const withdrawalRequestResult = await contract.sendWithdrawalRequest(
+        const withdrawalRequestResult = await contract.sendWithdrawal(
             ownerWallet.getSender(),
             toNano('0.05'),
             toNano('1')
@@ -115,7 +115,7 @@ describe('main.fc contract tests', () => {
 
         await contract.sendDeposit(senderWallet.getSender(), toNano('5'));
 
-        const withdrawalRequestResult = await contract.sendWithdrawalRequest(
+        const withdrawalRequestResult = await contract.sendWithdrawal(
             senderWallet.getSender(),
             toNano('0.5'),
             toNano('1')
@@ -130,7 +130,7 @@ describe('main.fc contract tests', () => {
     })
 
     it('fails to withdraw funds because lack of balance', async () => {
-        const withdrawalRequestResult = await contract.sendWithdrawalRequest(
+        const withdrawalRequestResult = await contract.sendWithdrawal(
             ownerWallet.getSender(),
             toNano('0.5'),
             toNano('1')
